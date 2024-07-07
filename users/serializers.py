@@ -1,5 +1,5 @@
-from django.utils.crypto import get_random_string
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User
 
@@ -16,6 +16,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = ['firstName', 'lastName', 'email', 'password', 'phone']
         extra_kwargs = {'password': {'write_only': True}}
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise ValidationError("Email already registered")
+        return value
 
     def create(self, validated_data):
         user = User.objects.create_user(

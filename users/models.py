@@ -28,12 +28,13 @@ class CustomUserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    userId = models.CharField(max_length=255, unique=True, default=get_random_string(length=32))
+    userId = models.CharField(max_length=255, unique=True)
     firstName = models.CharField(max_length=255)
     lastName = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15, validators=[
-        RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
+        RegexValidator(regex=r'^\+?1?\d{9,15}$',
+                       message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
     ], blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -45,3 +46,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+    def save(self, *args, **kwargs):
+        if not self.userId:
+            self.userId = get_random_string(length=32)
+        super().save(*args, **kwargs)

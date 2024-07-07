@@ -1,15 +1,9 @@
-from rest_framework import status, generics
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
-from .serializers import UserSerializer, RegisterSerializer
-from organisations.models import Organisation
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import CustomTokenObtainPairSerializer
-
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -41,14 +35,13 @@ class RegisterView(APIView):
         except ValidationError as e:
             errors = [{"field": field, "message": str(message[0])} for field, message in e.detail.items()]
             return Response({
-                "status": "Bad request",
-                "message": "Registration unsuccessful",
                 "errors": errors
             }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         except Exception as e:
             return Response({
                 "status": "Bad request",
-                "message": str(e)
+                "message": "Registration unsuccessful",
+                "statusCode": status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
 

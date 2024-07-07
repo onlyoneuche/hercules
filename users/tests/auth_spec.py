@@ -13,8 +13,13 @@ from datetime import timedelta
 class TestUsers(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.test_user = User.objects.create_user(email='testuser@example.com', password='testpass123',
-                                        firstName='Test', lastName='User', phone='1234567890')
+        self.test_user = User.objects.create_user(
+            email='testuser@example.com',
+            password='testpass123',
+            firstName='Test',
+            lastName='User',
+            phone='1234567890'
+        )
 
     # Unit Tests
 
@@ -22,12 +27,14 @@ class TestUsers(TestCase):
         """
         Check that the token expires at the correct time
         """
-        user = User.objects.create_user(email='tests@example.com', password='testpass123', userId='test123', firstName='Test', lastName='User')
+        user = User.objects.create_user(email='tests@example.com', password='testpass123', userId='test123',
+                                        firstName='Test', lastName='User')
         refresh = RefreshToken.for_user(user)
         access_token = refresh.access_token
 
         expected_expiry = timezone.now() + timedelta(minutes=60)
-        self.assertAlmostEqual(access_token.payload['exp'], expected_expiry.timestamp(), delta=1)  # Allow 1 second difference
+        self.assertAlmostEqual(access_token.payload['exp'], expected_expiry.timestamp(),
+                               delta=1)  # Allow 1 second difference
 
     def test_successful_login(self):
         """
@@ -118,36 +125,33 @@ class TestUsers(TestCase):
     def test_register_duplicate_email(self):
         # First, register a user
         url = reverse('register')
-        data = {
-            "userId": "testuser4",
-            "firstName": "Bob",
-            "lastName": "Smith",
-            "email": "bob@example.com",
-            "password": "securepass123",
-            "phone": "+1122334455"
-        }
-        self.client.post(url, data)
+        data = {"firstName": "Bob", "lastName": "Smith", "email": "testuser@example.com", "password": "securepass123",
+                "phone": "+1122334455", 'userId': 'testuser5'}
 
         # Try to register another user with the same email
-        data['userId'] = 'testuser5'
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         self.assertIn('errors', response.data)
         self.assertTrue(any(error['field'] == 'email' for error in response.data['errors']))
 
     def test_register_duplicate(self):
-        # First, register a user
+        test_user = User.objects.create_user(
+            email='testuser1@example.com',
+            password='testpass123',
+            firstName='Test',
+            lastName='User',
+            phone='1234567890'
+        )
+
+        # Try to register another user with the same email
         url = reverse('register')
         data = {
             "firstName": "Charlie",
             "lastName": "Brown",
-            "email": "charlie@example.com",
+            "email": test_user.email,
             "password": "securepass123",
             "phone": "+1555666777"
         }
-        res1 = self.client.post(url, data)
 
-        # Try to register another user with the same email
-        data['email'] = 'charlie@example.com'
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
