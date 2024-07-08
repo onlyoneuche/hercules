@@ -27,3 +27,7 @@ class OrganisationSerializer(serializers.ModelSerializer):
 class CreateOrganisationSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=255)
     description = serializers.CharField(max_length=255, required=False)
+
+
+class AddUserToOrganisationSerializer(serializers.Serializer):
+    userId = serializers.CharField(max_length=255)
