@@ -22,3 +22,8 @@ class OrganisationSerializer(serializers.ModelSerializer):
                     })
             raise serializers.ValidationError({'errors': error_messages})
         return attrs
+
+
+class CreateOrganisationSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    description = serializers.CharField(max_length=255, required=False)

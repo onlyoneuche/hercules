@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from organisations.models import Organisation
 from .serializers import RegisterSerializer, UserSerializer
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, PermissionDenied
 
 
 class RegisterView(APIView):
@@ -80,6 +80,28 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 class UserDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'userId'
+
+    def get_object(self):
+        # Get the requested user
+        user_id = self.kwargs.get('userId')
+        requested_user = User.objects.filter(userId=user_id).first()
+
+        if not requested_user:
+            raise ValidationError("User not found")
+
+        current_user = self.request.user
+
+        if current_user.userId == user_id:
+            return current_user
+
+        user_orgs = current_user.organisations.all()
+
+        # Check if the requested user belongs to any of these organizations
+        print(f"user_orgs: {user_orgs} --- requested_user_orgs: {requested_user.organisations.all()}")
+        if requested_user.organisations.all() in user_orgs:
+            return requested_user
+
+        # If not, raise a PermissionDenied exception
+        raise PermissionDenied("You do not have permission to view this user's details.")
